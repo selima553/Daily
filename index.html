@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1, user-scalable=no" />
+  <title>Daily Check-In Mobile App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #5A67D8;
+      --primary-dark: #4C51BF;
+      --light: #F7FAFC;
+      --dark: #2D3748;
+      --card-bg: #FFFFFF;
+      --radius: 24px;
+      --spacing: 20px;
+      --transition: 0.35s ease;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--light);
+      font-family: 'Poppins', sans-serif;
+      color: var(--dark);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      flex-direction: column;
+    }
+    #app {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--light);
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      border-radius: var(--radius) var(--radius) 0 0;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: var(--spacing);
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+      user-select: none;
+      position: relative;
+      z-index: 10;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .screen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      padding: var(--spacing);
+      background: var(--card-bg);
+      border-radius: 0 0 var(--radius) var(--radius);
+      box-shadow: inset 0 0 15px rgb(0 0 0 / 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(100%);
+      transition: var(--transition);
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateX(0);
+      transition: var(--transition);
+    }
+    .screen.prev {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    h1 {
+      margin-bottom: var(--spacing);
+      font-weight: 700;
+      font-size: 1.8rem;
+      user-select: none;
+    }
+
+    /* Mood selection */
+    .mood-options {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: var(--spacing);
+    }
+    .mood-options button {
+      font-size: 3.8rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 50%;
+      padding: 20px;
+      transition: background 0.3s, transform 0.25s;
+      user-select: none;
+      color: var(--dark);
+      filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.1));
+      flex: 1;
+      max-width: 120px;
+    }
+    .mood-options button.selected {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.2);
+      filter: drop-shadow(0 3px 5px rgb(90 103 216 / 0.6));
+    }
+    .mood-options button:hover:not(.selected) {
+      background: #E2E8F0;
+    }
+
+    /* Inputs */
+    label {
+      align-self: flex-start;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+      user-select: none;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      max-width: 440px;
+      font-size: 1.1rem;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1.5px solid #CBD5E0;
+      outline-offset: 2px;
+      outline-color: transparent;
+      transition: outline-color 0.3s ease;
+      resize: none;
+      font-family: 'Poppins', sans-serif;
+    }
+    input[type="text"]:focus,
+    textarea:focus {
+      outline-color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+    }
+
+    /* Buttons */
+    .buttons {
+      width: 100%;
+      max-width: 440px;
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    button.nav-btn {
+      flex: 1;
+      padding: 16px 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-radius: 24px;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s ease;
+      box-shadow: 0 3px 8px rgb(90 103 216 / 0.3);
+      color: white;
+    }
+    button.nav-btn:disabled {
+      background: #A0AEC0;
+      box-shadow: none;
+      cursor: default;
+      color: #E2E8F0;
+    }
+    button.nav-btn.next {
+      background: var(--primary);
+    }
+    button.nav-btn.next:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+    button.nav-btn.back {
+      background: #CBD5E0;
+      color: var(--dark);
+      box-shadow: none;
+    }
+    button.nav-btn.back:hover:not(:disabled) {
+      background: #A0AEC0;
+    }
+
+    /* History */
+    #history {
+      width: 100%;
+      max-width: 440px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding-bottom: 80px;
+    }
+    .entry {
+      background: var(--light);
+      border-radius: 20px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+      user-select: none;
+    }
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+    .hashtags {
+      font-size: 0.95rem;
+      color: #4A5568;
+      margin-bottom: 8px;
+      word-wrap: break-word;
+    }
+    .tomorrow {
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--dark);
+    }
+
+    /* Add New button */
+    .add-new {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 440px;
+      width: 100%;
+      padding: 0 10px;
+      pointer-events: auto;
+      z-index: 20;
+    }
+    .add-new button {
+      width: 100%;
+      padding: 16px 0;
+      background: var(--primary);
+      border-radius: 28px;
+      border: none;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgb(90 103 216 / 0.4);
+      user-select: none;
+      transition: background 0.3s;
+    }
+    .add-new button:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Scrollbar for history */
+    #history::-webkit-scrollbar {
+      width: 8px;
+    }
+    #history::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 4px;
+    }
+    #history::-webkit-scrollbar-track {
+      background: #E2E8F0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main" aria-label="Daily Check-In app">
+    <header>Daily Check-In</header>
+    <main>
+      <!-- Step 1: Mood -->
+      <section id="step-1" class="screen active" aria-label="Step 1: How was your day?">
+        <h1>How was your day?</h1>
+        <div class="mood-options" role="radiogroup" aria-labelledby="step1-label">
+          <button aria-checked="false" role="radio" data-value="bad" tabindex="0" aria-label="Bad 😞">😞</button>
+          <button aria-checked="true" role="radio" data-value="ok" tabindex="-1" aria-label="Okay 😐" class="selected">😐</button>
+          <button aria-checked="false" role="radio" data-value="good" tabindex="-1" aria-label="Good 😊">😊</button>
+        </div>
+        <div class="buttons">
+          <button class="nav-btn back" disabled aria-disabled="true">Back</button>
+          <button class="nav-btn next" id="next1">Next</button>
+        </div>
+      </section>
+
+      <!-- Step 2: What did you do today? -->
+      <section id="step-2" class="screen" aria-label="Step 2: What did you do today?">
+        <h1>What did you do today?</h1>
+        <label for="did-today" class="visually-hidden">Activities you did today</label>
+        <input type="text" id="did-today" placeholder="e.g. gym, reading" autocomplete="off" />
+        <div class="buttons">
+          <button class="nav-btn back" id="back2">Back</button>
+          <button class="nav-btn next" id="next2" disabled>Next</button>
+        </div>
+      </section>
+
+      <!-- Step 3: What to do tomorrow? -->
+      <section id="step-3" class="screen" aria-label="Step 3: What to do tomorrow?">
+        <h1>What to do tomorrow?</h1>
+        <label for="for-tomorrow" class="visually-hidden">Tasks planned for tomorrow</label>
+        <textarea id="for-tomorrow" rows="3" placeholder="Your tasks..." autocomplete="off"></textarea>
+        <div class="buttons">
+          <button class="nav-btn back" id="back3">Back</button>
+          <button class="nav-btn next" id="next3" disabled>Finish</button>
+        </div>
+      </section>
+
+      <!-- Step 4: History -->
+      <section id="step-4" class="screen" aria-label="Step 4: History">
+        <h1>Your History</h1>
+        <div id="history" tabindex="0" aria-live="polite" aria-relevant="additions"></div>
+        <div class="add-new">
+          <button id="add-new">+ New Entry</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+  // App State
+  let currentStep = 1;
+  const data = {
+    mood: 'ok',
+    activities: '',
+    tomorrow: ''
+  };
+
+  // Elements
+  const steps = {
+    1: document.getElementById('step-1'),
+    2: document.getElementById('step-2'),
+    3: document.getElementById('step-3'),
+    4: document.getElementById('step-4'),
+  };
+
+  const moodButtons = Array.from(steps[1].querySelectorAll('.mood-options button'));
+  const back1 = steps[1].querySelector('.back');
+  const next1 = document.getElementById('next1');
+
+  const activitiesInput = document.getElementById('did-today');
+  const back2 = document.getElementById('back2');
+  const next2 = document.getElementById('next2');
+
+  const tomorrowInput = document.getElementById('for-tomorrow');
+  const back3 = document.getElementById('back3');
+  const next3 = document.getElementById('next3');
+
+  const historyContainer = document.getElementById('history');
+  const addNewBtn = document.getElementById('add-new');
+
+  // Utility: Show step screen with simple slide transitions
+  function showStep(n) {
+    for (let i = 1; i <= 4; i++) {
+      if (i === n) {
+        steps[i].classList.add('active');
+        steps[i].classList.remove('prev');
+      } else if (i < n) {
+        steps[i].classList.remove('active');
+        steps[i].classList.add('prev');
+      } else {
+        steps[i].classList.remove('active', 'prev');
+      }
+    }
+    currentStep = n;
+
+    if (n === 4) renderHistory();
+  }
+
+  // Step 1: Mood selection
+  moodButtons.forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      moodButtons.forEach(b => {
+        b.classList.remove('selected');
+        b.setAttribute('aria-checked', 'false');
+        b.tabIndex = -1;
+      });
+      btn.classList.add('selected');
+      btn.setAttribute('aria-checked', 'true');
+      btn.tabIndex = 0;
+      data.mood = btn.dataset.value;
+    });
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = (i + 1) % moodButtons.length;
+        moodButtons[next].focus();
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = (i - 1 + moodButtons.length) % moodButtons.length;
+        moodButtons[prev].focus();
+      }
+    });
+  });
+
+  next1.addEventListener('click', () => showStep(2));
+
+  // Step 2: Activities input
+  activitiesInput.addEventListener('input', () => {
+    next2.disabled = activitiesInput.value.trim() === '';
+  });
+  back2.addEventListener('click', () => showStep(1));
+  next2.addEventListener('click', () => {
+    data.activities = activitiesInput.value.trim();
+    showStep(3);
+  });
+
+  // Step 3: Tomorrow tasks
+  tomorrowInput.addEventListener('input', () => {
+    next3.disabled = tomorrowInput.value.trim() === '';
+  });
+  back3.addEventListener('click', () => showStep(2));
+  next3.addEventListener('click', () => {
+    data.tomorrow = tomorrowInput.value.trim();
+
+    // Save entry
+    const entry = {
+      date: new Date().toISOString().slice(0, 10),
+      mood: data.mood,
+      hashtags: data.activities
+        .split(/\s*,\s*/)
+        .filter(t => t.length)
+        .map(t => (t.startsWith('#') ? t : '#' + t)),
+      tomorrow: data.tomorrow
+    };
+    const allEntries = JSON.parse(localStorage.getItem('moodEntries') || '[]');
+    allEntries.unshift(entry);
+    localStorage.setItem('moodEntries', JSON.stringify(allEntries));
+
+    // Clear inputs for next entry
+    // But keep last mood selected
+    activitiesInput.value = '';
+    tomorrowInput.value = '';
+    next2.disabled = true;
+    next3.disabled = true;
+
+    showStep(4);
+  });
+
+  // Step 4: History
+  addNewBtn.addEventListener('click', () => showStep(1));
+
+  function renderHistory() {
+    const all = JSON.parse(localStorage.getItem('moodEntries') || '[]');
+    historyContainer.innerHTML = '';
+    if (!all.length) {
+      historyContainer.innerHTML = '<p style="text-align:center; color:#718096; margin-top: 20px;">No entries yet.</p>';
+      return;
+    }
+    all.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'entry';
+      div.innerHTML = `
+        <div class="entry-header">
+          <span>${e.date}</span>
+          <span>${e.mood === 'good' ? '😊' : e.mood === 'ok' ? '😐' : '😞'}</span>
+        </div>
+        <div class="hashtags">${e.hashtags.join(' ')}</div>
+        <div class="tomorrow">Tomorrow: ${e.tomorrow || '-'}</div>
+      `;
+      historyContainer.appendChild(div);
+    });
+  }
+
+  // Initialize
+  showStep(1);
+  activitiesInput.value = '';
+  tomorrowInput.value = '';
+  next2.disabled = true;
+  next3.disabled = true;
+</script>
+
+</body>
+</html>
