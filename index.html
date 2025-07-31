@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1, user-scalable=no" />
-  <title>Daily Check-In Mobile App</title>
+  <title>Daily Check-In Mobile App with Edit</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -217,6 +217,7 @@
       margin-bottom: 14px;
       box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
       user-select: none;
+      position: relative;
     }
     .entry-header {
       display: flex;
@@ -236,6 +237,25 @@
       font-style: italic;
       font-size: 1rem;
       color: var(--dark);
+    }
+    .entry button.edit-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: var(--primary);
+      border: none;
+      color: white;
+      border-radius: 14px;
+      padding: 6px 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.3s;
+      box-shadow: 0 2px 6px rgb(90 103 216 / 0.5);
+    }
+    .entry button.edit-btn:hover {
+      background: var(--primary-dark);
     }
 
     /* Add New button */
@@ -280,11 +300,49 @@
       background: #E2E8F0;
       border-radius: 4px;
     }
+
+    /* History button - fixed top right */
+    #history-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: var(--primary);
+      border: none;
+      color: white;
+      border-radius: 28px;
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 3px 8px rgb(90 103 216 / 0.5);
+      z-index: 100;
+      transition: background 0.3s;
+    }
+    #history-btn:hover {
+      background: var(--primary-dark);
+    }
+    #history-btn.hidden {
+      display: none;
+    }
+
+    /* Cancel button for editing */
+    .buttons .cancel-btn {
+      flex: 1;
+      margin-right: 12px;
+      background: #E53E3E;
+      color: white;
+      box-shadow: 0 3px 8px rgb(229 62 62 / 0.6);
+    }
+    .buttons .cancel-btn:hover {
+      background: #9B2C2C;
+    }
   </style>
 </head>
 <body>
   <div id="app" role="main" aria-label="Daily Check-In app">
     <header>Daily Check-In</header>
+    <button id="history-btn" aria-label="Go to history">📜 History</button>
     <main>
       <!-- Step 1: Mood -->
       <section id="step-1" class="screen active" aria-label="Step 1: How was your day?">
@@ -336,6 +394,7 @@
 <script>
   // App State
   let currentStep = 1;
+  let editIndex = null; // null = new entry; else editing existing entry
   const data = {
     mood: 'ok',
     activities: '',
@@ -365,6 +424,8 @@
   const historyContainer = document.getElementById('history');
   const addNewBtn = document.getElementById('add-new');
 
+  const historyBtn = document.getElementById('history-btn');
+
   // Utility: Show step screen with simple slide transitions
   function showStep(n) {
     for (let i = 1; i <= 4; i++) {
@@ -379,8 +440,13 @@
       }
     }
     currentStep = n;
-
-    if (n === 4) renderHistory();
+    // Show/hide history button except on history screen
+    if (n === 4) {
+      historyBtn.classList.add('hidden');
+      renderHistory();
+    } else {
+      historyBtn.classList.remove('hidden');
+    }
   }
 
   // Step 1: Mood selection
@@ -427,10 +493,12 @@
     next3.disabled = tomorrowInput.value.trim() === '';
   });
   back3.addEventListener('click', () => showStep(2));
+
   next3.addEventListener('click', () => {
     data.tomorrow = tomorrowInput.value.trim();
 
-    // Save entry
+    const allEntries = JSON.parse(localStorage.getItem('moodEntries') || '[]');
+
     const entry = {
       date: new Date().toISOString().slice(0, 10),
       mood: data.mood,
@@ -440,23 +508,54 @@
         .map(t => (t.startsWith('#') ? t : '#' + t)),
       tomorrow: data.tomorrow
     };
-    const allEntries = JSON.parse(localStorage.getItem('moodEntries') || '[]');
-    allEntries.unshift(entry);
+
+    if (editIndex === null) {
+      allEntries.unshift(entry);
+    } else {
+      allEntries[editIndex] = entry;
+    }
+
     localStorage.setItem('moodEntries', JSON.stringify(allEntries));
 
     // Clear inputs for next entry
-    // But keep last mood selected
     activitiesInput.value = '';
     tomorrowInput.value = '';
     next2.disabled = true;
     next3.disabled = true;
+    editIndex = null;
+    next3.textContent = 'Finish';
+    clearMoodSelection();
+    selectMood('ok'); // default mood
 
     showStep(4);
   });
 
   // Step 4: History
-  addNewBtn.addEventListener('click', () => showStep(1));
+  addNewBtn.addEventListener('click', () => {
+    editIndex = null;
+    next3.textContent = 'Finish';
+    clearMoodSelection();
+    selectMood('ok');
+    activitiesInput.value = '';
+    tomorrowInput.value = '';
+    next2.disabled = true;
+    next3.disabled = true;
+    showStep(1);
+  });
 
+  historyBtn.addEventListener('click', () => {
+    editIndex = null;
+    next3.textContent = 'Finish';
+    clearMoodSelection();
+    selectMood('ok');
+    activitiesInput.value = '';
+    tomorrowInput.value = '';
+    next2.disabled = true;
+    next3.disabled = true;
+    showStep(4);
+  });
+
+  // Render history entries
   function renderHistory() {
     const all = JSON.parse(localStorage.getItem('moodEntries') || '[]');
     historyContainer.innerHTML = '';
@@ -464,7 +563,7 @@
       historyContainer.innerHTML = '<p style="text-align:center; color:#718096; margin-top: 20px;">No entries yet.</p>';
       return;
     }
-    all.forEach(e => {
+    all.forEach((e, idx) => {
       const div = document.createElement('div');
       div.className = 'entry';
       div.innerHTML = `
@@ -474,17 +573,119 @@
         </div>
         <div class="hashtags">${e.hashtags.join(' ')}</div>
         <div class="tomorrow">Tomorrow: ${e.tomorrow || '-'}</div>
+        <button class="edit-btn" aria-label="Edit entry on ${e.date}">Edit</button>
       `;
       historyContainer.appendChild(div);
+
+      div.querySelector('.edit-btn').addEventListener('click', () => {
+        loadEntryForEdit(idx);
+      });
     });
   }
 
+  // Load entry into form for editing
+  function loadEntryForEdit(index) {
+    const all = JSON.parse(localStorage.getItem('moodEntries') || '[]');
+    if (index < 0 || index >= all.length) return;
+    const entry = all[index];
+    editIndex = index;
+
+    // Load data to inputs
+    selectMood(entry.mood);
+    activitiesInput.value = entry.hashtags.map(t => t.startsWith('#') ? t.slice(1) : t).join(', ');
+    tomorrowInput.value = entry.tomorrow || '';
+
+    // Enable buttons accordingly
+    next2.disabled = activitiesInput.value.trim() === '';
+    next3.disabled = tomorrowInput.value.trim() === '';
+
+    next3.textContent = 'Save';
+
+    // Show cancel button on step 3
+    addCancelButton();
+
+    showStep(1);
+    // Go through steps to step 3 automatically:
+    setTimeout(() => showStep(2), 150);
+    setTimeout(() => showStep(3), 300);
+  }
+
+  // Select mood button programmatically
+  function selectMood(value) {
+    data.mood = value;
+    moodButtons.forEach(b => {
+      b.classList.remove('selected');
+      b.setAttribute('aria-checked', 'false');
+      b.tabIndex = -1;
+    });
+    const btn = moodButtons.find(b => b.dataset.value === value);
+    if (btn) {
+      btn.classList.add('selected');
+      btn.setAttribute('aria-checked', 'true');
+      btn.tabIndex = 0;
+    }
+  }
+
+  // Clear mood selection (no mood selected)
+  function clearMoodSelection() {
+    moodButtons.forEach(b => {
+      b.classList.remove('selected');
+      b.setAttribute('aria-checked', 'false');
+      b.tabIndex = -1;
+    });
+  }
+
+  // Cancel button management
+  function addCancelButton() {
+    let cancelBtn = document.querySelector('.cancel-btn');
+    if (!cancelBtn) {
+      cancelBtn = document.createElement('button');
+      cancelBtn.className = 'nav-btn cancel-btn';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.type = 'button';
+
+      // Insert cancel button before next3 in step 3
+      next3.parentNode.insertBefore(cancelBtn, next3);
+
+      cancelBtn.addEventListener('click', () => {
+        editIndex = null;
+        next3.textContent = 'Finish';
+        cancelBtn.remove();
+        activitiesInput.value = '';
+        tomorrowInput.value = '';
+        next2.disabled = true;
+        next3.disabled = true;
+        clearMoodSelection();
+        selectMood('ok');
+        showStep(4);
+      });
+    }
+  }
+
+  // Remove cancel button (if any)
+  function removeCancelButton() {
+    const cancelBtn = document.querySelector('.cancel-btn');
+    if (cancelBtn) cancelBtn.remove();
+  }
+
+  // Inputs events to enable/disable next buttons
+  activitiesInput.addEventListener('input', () => {
+    next2.disabled = activitiesInput.value.trim() === '';
+  });
+
+  tomorrowInput.addEventListener('input', () => {
+    next3.disabled = tomorrowInput.value.trim() === '';
+  });
+
   // Initialize
   showStep(1);
+  clearMoodSelection();
+  selectMood('ok');
   activitiesInput.value = '';
   tomorrowInput.value = '';
   next2.disabled = true;
   next3.disabled = true;
+
 </script>
 
 </body>
