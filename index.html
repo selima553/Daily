@@ -2,373 +2,346 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <title>Animated Mood Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mood Tracker</title>
   <style>
     :root {
-      --bg: #F0F3F8;
-      --card: #FFFFFF;
-      --primary: #5A67D8;
-      --primary-dark: #434190;
-      --good: #38A169;
-      --ok: #DD6B20;
-      --bad: #E53E3E;
-      --radius: 20px;
-      --spacing: 24px;
-      --transition: 0.4s ease;
+      --primary: #4e89ff;
+      --good: #28a745;
+      --ok: #ffc107;
+      --bad: #dc3545;
     }
-    *, *::before, *::after { box-sizing: border-box; }
-    body, html {
-      margin: 0; padding: 0;
-      height: 100%;
-      font-family: 'Poppins', sans-serif;
-      background: var(--bg);
-      color: #2D3748;
-      overflow: hidden;
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f8;
+      color: #333;
     }
-    #app {
-      position: relative;
-      width: 100%;
-      max-width: 480px;
-      height: 100%;
-      margin: 0 auto;
-      background: var(--bg);
+
+    .app-container {
+      max-width: 500px;
+      margin: auto;
+      height: 100vh;
+      background: white;
       display: flex;
       flex-direction: column;
-    }
-    header {
-      background: var(--primary);
-      color: white;
-      padding: var(--spacing);
-      font-size: 1.8rem;
-      font-weight: 700;
-      text-align: center;
       position: relative;
-    }
-    #history-btn {
-      position: absolute; top: var(--spacing); right: var(--spacing);
-      background: rgba(255,255,255,0.3);
-      border: none; padding: 10px 14px;
-      border-radius: var(--radius);
-      font-size: 1.2rem;
-      cursor: pointer; color: white;
-      transition: background var(--transition);
-    }
-    #history-btn:hover { background: rgba(255,255,255,0.5); }
-
-    main {
-      position: relative;
-      flex: 1;
       overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
 
-    .screen {
-      position: absolute; top: 0; left: 100%;
-      width: 100%; height: 100%;
-      padding: var(--spacing);
-      display: flex; flex-direction: column; align-items: center;
-      background: var(--bg);
-      transition: transform var(--transition), opacity var(--transition);
-      opacity: 0; pointer-events: none;
-    }
-    .screen.active {
-      transform: translateX(-100%);
-      opacity: 1; pointer-events: all;
-    }
-    .screen.prev {
-      transform: translateX(-200%);
-      opacity: 0; pointer-events: none;
+    .step {
+      position: absolute;
+      top: 0;
+      left: 100%;
+      width: 100%;
+      height: 100%;
+      padding: 30px 20px;
+      box-sizing: border-box;
+      transition: all 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    h1 {
-      margin-top: 0; margin-bottom: var(--spacing);
-      font-size: 2rem; font-weight: 700;
+    .step.active {
+      left: 0;
     }
 
-    .mood-options {
-      display: flex; justify-content: space-between; width: 100%;
-      max-width: 360px; margin-bottom: var(--spacing);
+    h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 30px;
     }
-    .mood-options button {
-      flex: 1; margin: 0 8px;
-      background: var(--card);
+
+    .emoji-row {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .emoji-button {
+      font-size: 3rem;
+      margin: 0 10px;
+      background: none;
       border: none;
-      border-radius: 50%;
-      padding: 24px;
-      font-size: 3.5rem;
       cursor: pointer;
-      box-shadow:  8px 8px 16px rgba(0,0,0,0.1),
-                   -8px -8px 16px rgba(255,255,255,0.7);
-      transition: transform .2s ease, box-shadow .2s ease;
+      transition: transform 0.2s ease;
     }
-    .mood-options button.selected {
-      transform: scale(1.2);
-      box-shadow: inset 4px 4px 8px rgba(0,0,0,0.1),
-                  inset -4px -4px 8px rgba(255,255,255,0.7);
+
+    .emoji-button.selected {
+      transform: scale(1.4);
     }
 
     input, textarea {
-      width: 100%; max-width: 440px;
-      padding: 16px;
-      margin-bottom: var(--spacing);
-      border-radius: var(--radius);
-      border: none;
       font-size: 1.1rem;
-      box-shadow: inset 4px 4px 8px rgba(0,0,0,0.05),
-                  inset -4px -4px 8px rgba(255,255,255,0.7);
-      transition: box-shadow var(--transition);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      width: 100%;
+      box-sizing: border-box;
       resize: none;
-    }
-    input:focus, textarea:focus {
-      outline: none;
-      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1),
-                  inset -2px -2px 4px rgba(255,255,255,0.9),
-                  0 0 0 3px var(--primary);
     }
 
     .nav-btn {
-      font-size: 1.2rem; font-weight: 600;
-      padding: 16px 0;
-      width: 100%; max-width: 440px;
-      border: none; border-radius: var(--radius);
-      background: var(--primary); color: white;
+      background: var(--primary);
+      color: white;
+      font-size: 1.1rem;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
       cursor: pointer;
-      box-shadow:  4px 4px 8px rgba(0,0,0,0.1),
-                   -4px -4px 8px rgba(255,255,255,0.7);
-      transition: background var(--transition), transform .2s;
+      width: 100%;
     }
-    .nav-btn:disabled { background: #CBD5E0; cursor: default; }
-    .nav-btn:not(:disabled):hover { background: var(--primary-dark); transform: translateY(-2px); }
 
-    #historyContainer {
-      flex: 1; width: 100%; overflow-y: auto;
-      padding-right: 10px;
-      animation: fadeIn 0.6s ease both;
+    .nav-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      z-index: 2;
+    }
+
+    .top-nav button {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     .history-entry {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-      position: relative;
-      box-shadow:  4px 4px 8px rgba(0,0,0,0.05),
-                   -4px -4px 8px rgba(255,255,255,0.7);
-      animation: slideInUp 0.5s ease both;
+      background: #f1f3f5;
+      border-left: 6px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
     }
+
     .entry-header {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 1.1rem; font-weight: 600;
-      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+      margin-bottom: 8px;
     }
-    .entry-mood {
-      font-size: 1.4rem; font-weight: 700;
+
+    .entry-mood.good {
+      color: var(--good);
     }
-    .entry-mood.good { color: var(--good); }
-    .entry-mood.ok   { color: var(--ok); }
-    .entry-mood.bad  { color: var(--bad); }
+
+    .entry-mood.ok {
+      color: var(--ok);
+    }
+
+    .entry-mood.bad {
+      color: var(--bad);
+    }
 
     .edit-btn {
-      position: absolute; top: 16px; right: 16px;
-      background: var(--ok); color: white;
-      border: none; border-radius: 12px;
-      padding: 6px 12px; font-size: 0.9rem; cursor: pointer;
-      transition: background var(--transition);
-    }
-    .edit-btn:hover { background: var(--primary-dark); }
-
-    .add-new {
-      margin-top: var(--spacing);
+      background: #ffc107;
+      color: #333;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: 6px;
+      margin-top: 10px;
+      cursor: pointer;
     }
 
-    /* Animations */
-    @keyframes slideInUp {
-      0% { transform: translateY(30px); opacity: 0; }
-      100% { transform: translateY(0); opacity: 1; }
+    .history-scroll {
+      overflow-y: auto;
+      flex-grow: 1;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+
+    @media (max-height: 600px) {
+      .step {
+        padding-top: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <header>
-      Mood Tracker
-      <button id="history-btn" aria-label="View history">📜</button>
-    </header>
-    <main>
-      <!-- Step 1 -->
-      <section id="step1" class="screen active">
-        <h1>How was your day?</h1>
-        <div class="mood-options">
-          <button data-value="bad" aria-label="Bad">😞</button>
-          <button class="selected" data-value="ok" aria-label="Okay">😐</button>
-          <button data-value="good" aria-label="Good">😊</button>
-        </div>
-        <button class="nav-btn" id="to2">Next</button>
-      </section>
+  <div class="app-container">
+    <div class="top-nav"><button id="historyBtn">📜 History</button></div>
 
-      <!-- Step 2 -->
-      <section id="step2" class="screen">
-        <h1>What did you do?</h1>
-        <input id="didInput" type="text" placeholder="e.g. gym, coding, DJing" />
-        <button class="nav-btn" id="to3" disabled>Next</button>
-      </section>
+    <!-- Step 1: Mood -->
+    <div class="step active" id="step1">
+      <h2>How was your day?</h2>
+      <div class="emoji-row">
+        <button class="emoji-button" data-value="bad">😞</button>
+        <button class="emoji-button selected" data-value="ok">😐</button>
+        <button class="emoji-button" data-value="good">😊</button>
+      </div>
+      <button class="nav-btn" id="next1">Next</button>
+    </div>
 
-      <!-- Step 3 -->
-      <section id="step3" class="screen">
-        <h1>Plan for tomorrow</h1>
-        <textarea id="tomInput" rows="4" placeholder="Enter plan..."></textarea>
-        <button class="nav-btn" id="to4" disabled>Finish</button>
-      </section>
+    <!-- Step 2: What you did -->
+    <div class="step" id="step2">
+      <h2>What did you do today?</h2>
+      <input type="text" id="activitiesInput" placeholder="#gym, #code, #dj" />
+      <button class="nav-btn" id="next2" disabled>Next</button>
+    </div>
 
-      <!-- Step 4 -->
-      <section id="step4" class="screen">
-        <h1>Your History</h1>
-        <div id="historyContainer"></div>
-        <button class="nav-btn add-new" id="newEntry">+ New Entry</button>
-      </section>
-    </main>
+    <!-- Step 3: Tomorrow's Plan -->
+    <div class="step" id="step3">
+      <h2>Plan for Tomorrow</h2>
+      <textarea id="tomorrowInput" rows="4" placeholder="Enter your plan..."></textarea>
+      <button class="nav-btn" id="next3" disabled>Finish</button>
+    </div>
+
+    <!-- Step 4: History -->
+    <div class="step" id="step4">
+      <h2>Your History</h2>
+      <div class="history-scroll" id="historyContainer"></div>
+      <button class="nav-btn" id="addNewBtn">+ New Entry</button>
+    </div>
   </div>
 
   <script>
-    const screens = {
-      1: document.getElementById('step1'),
-      2: document.getElementById('step2'),
-      3: document.getElementById('step3'),
-      4: document.getElementById('step4'),
-    };
-    let current = 1, editIdx = null;
-    const state = { mood: 'ok', did: '', tom: '' };
-
-    const historyBtn = document.getElementById('history-btn');
-    const moodBtns = Array.from(screens[1].querySelectorAll('button[data-value]'));
-    const to2 = document.getElementById('to2');
-    const didInput = document.getElementById('didInput');
-    const to3 = document.getElementById('to3');
-    const tomInput = document.getElementById('tomInput');
-    const to4 = document.getElementById('to4');
+    const steps = Array.from(document.querySelectorAll('.step'));
+    const moodButtons = document.querySelectorAll('.emoji-button');
+    const next1 = document.getElementById('next1');
+    const next2 = document.getElementById('next2');
+    const next3 = document.getElementById('next3');
+    const historyBtn = document.getElementById('historyBtn');
+    const addNewBtn = document.getElementById('addNewBtn');
+    const activitiesInput = document.getElementById('activitiesInput');
+    const tomorrowInput = document.getElementById('tomorrowInput');
     const historyContainer = document.getElementById('historyContainer');
-    const newEntry = document.getElementById('newEntry');
 
-    function show(n) {
-      Object.keys(screens).forEach(i => {
-        screens[i].classList.remove('active','prev');
-        if (+i < n) screens[i].classList.add('prev');
-        if (+i === n) screens[i].classList.add('active');
+    let data = { mood: 'ok', activities: '', tomorrow: '' };
+    let editIndex = null;
+
+    function goTo(stepIndex) {
+      steps.forEach((s, i) => {
+        s.classList.remove('active');
+        if (i === stepIndex - 1) s.classList.add('active');
       });
-      current = n;
-      historyBtn.style.visibility = (n<4?'visible':'hidden');
-      if (n===4) renderHistory();
     }
 
-    // Mood selection
-    moodBtns.forEach(btn => {
-      btn.onclick = () => {
-        moodBtns.forEach(b=>b.classList.remove('selected'));
+    moodButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        moodButtons.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        state.mood = btn.dataset.value;
-      };
+        data.mood = btn.dataset.value;
+      });
     });
-    to2.onclick  = () => show(2);
 
-    // Did input
-    didInput.oninput = () => {
-      to3.disabled = didInput.value.trim()==='';
-    };
-    to3.onclick = () => {
-      state.did = didInput.value.trim();
-      show(3);
-    };
+    next1.addEventListener('click', () => goTo(2));
+    next2.addEventListener('click', () => goTo(3));
 
-    // Tomorrow
-    tomInput.oninput = () => {
-      to4.disabled = tomInput.value.trim()==='';
-    };
-    to4.onclick = () => {
-      state.tom = tomInput.value;
-      saveEntry();
-      resetForm();
-      show(4);
-    };
+    next3.addEventListener('click', () => {
+      data.activities = activitiesInput.value;
+      data.tomorrow = tomorrowInput.value;
 
-    historyBtn.onclick = () => show(4);
-    newEntry.onclick   = () => { resetForm(); show(1); };
-
-    function saveEntry() {
-      const entries = JSON.parse(localStorage.getItem('moodEntries')||'[]');
       const entry = {
         date: new Date().toISOString().slice(0,10),
-        mood: state.mood,
-        hashtags: state.did.split(/\s*,\s*/).map(t=>t.startsWith('#')?t:'#'+t),
-        tom: state.tom
+        mood: data.mood,
+        hashtags: data.activities.split(/\s*,\s*/).map(t => t.startsWith('#') ? t : '#' + t),
+        tomorrow: data.tomorrow
       };
-      if (editIdx===null) entries.unshift(entry);
-      else entries[editIdx]=entry;
+
+      const entries = JSON.parse(localStorage.getItem('moodEntries') || '[]');
+      if (editIndex === null) entries.unshift(entry);
+      else entries[editIndex] = entry;
+
       localStorage.setItem('moodEntries', JSON.stringify(entries));
-      editIdx = null;
+      resetForm();
+      renderHistory();
+      goTo(4);
+    });
+
+    activitiesInput.addEventListener('input', () => {
+      next2.disabled = activitiesInput.value.trim() === '';
+    });
+
+    tomorrowInput.addEventListener('input', () => {
+      next3.disabled = tomorrowInput.value.trim() === '';
+    });
+
+    historyBtn.addEventListener('click', () => {
+      renderHistory();
+      goTo(4);
+    });
+
+    addNewBtn.addEventListener('click', () => {
+      resetForm();
+      goTo(1);
+    });
+
+    function resetForm() {
+      editIndex = null;
+      data = { mood: 'ok', activities: '', tomorrow: '' };
+      activitiesInput.value = '';
+      tomorrowInput.value = '';
+      next2.disabled = true;
+      next3.disabled = true;
+      moodButtons.forEach(b => {
+        b.classList.remove('selected');
+        if (b.dataset.value === 'ok') b.classList.add('selected');
+      });
     }
 
     function renderHistory() {
-      const entries = JSON.parse(localStorage.getItem('moodEntries')||'[]');
+      const entries = JSON.parse(localStorage.getItem('moodEntries') || '[]');
       historyContainer.innerHTML = '';
       if (!entries.length) {
-        historyContainer.innerHTML = '<p style="text-align:center;color:#888;">No entries yet.</p>';
+        historyContainer.innerHTML = `<p style="text-align:center; color:#888;">No entries yet.</p>`;
         return;
       }
-      entries.forEach((e,i) => {
+
+      entries.forEach((e, idx) => {
         const div = document.createElement('div');
         div.className = 'history-entry';
         div.innerHTML = `
           <div class="entry-header">
             <span>${e.date}</span>
             <span class="entry-mood ${e.mood}">
-              ${e.mood==='good'?'😊 Good':e.mood==='ok'?'😐 Okay':'😞 Bad'}
+              ${e.mood === 'good' ? '😊 Good' : e.mood === 'ok' ? '😐 Okay' : '😞 Bad'}
             </span>
           </div>
           <div><strong>Did:</strong> ${e.hashtags.join(' ')}</div>
-          <div><strong>Tomorrow:</strong><br>${e.tom.replace(/\n/g,'<br>')}</div>
+          <div><strong>Tomorrow:</strong><br>${e.tomorrow.replace(/\n/g, '<br>')}</div>
           <button class="edit-btn">Edit</button>
         `;
-        div.querySelector('.edit-btn').onclick = () => loadEdit(i);
+        div.querySelector('.edit-btn').addEventListener('click', () => loadEntry(idx));
         historyContainer.appendChild(div);
       });
     }
 
-    function loadEdit(i) {
-      const entries = JSON.parse(localStorage.getItem('moodEntries')||'[]');
-      const e = entries[i];
-      editIdx = i;
-      // load
-      state.mood = e.mood;
-      state.did  = e.hashtags.map(t=>t.replace(/^#/,'')).join(', ');
-      state.tom  = e.tom;
-      // update UI
-      moodBtns.forEach(b=>b.classList.remove('selected'));
-      moodBtns.find(b=>b.dataset.value===e.mood).classList.add('selected');
-      didInput.value = state.did; tomInput.value = state.tom;
-      to3.disabled = false; to4.disabled = false;
-      to4.textContent = 'Save';
+    function loadEntry(index) {
+      const entries = JSON.parse(localStorage.getItem('moodEntries') || '[]');
+      const e = entries[index];
+      editIndex = index;
 
-      show(1);
-      setTimeout(()=>show(2),200);
-      setTimeout(()=>show(3),400);
+      data = {
+        mood: e.mood,
+        activities: e.hashtags.map(h => h.replace(/^#/, '')).join(', '),
+        tomorrow: e.tomorrow
+      };
+
+      activitiesInput.value = data.activities;
+      tomorrowInput.value = data.tomorrow;
+      next2.disabled = data.activities.trim() === '';
+      next3.disabled = data.tomorrow.trim() === '';
+      moodButtons.forEach(b => {
+        b.classList.remove('selected');
+        if (b.dataset.value === data.mood) b.classList.add('selected');
+      });
+
+      goTo(1);
+      setTimeout(() => goTo(2), 300);
+      setTimeout(() => goTo(3), 600);
     }
 
-    function resetForm() {
-      state.mood='ok'; state.did=''; state.tom='';
-      moodBtns.forEach(b=>b.classList.remove('selected'));
-      moodBtns.find(b=>b.dataset.value==='ok').classList.add('selected');
-      didInput.value=''; tomInput.value='';
-      to3.disabled=true; to4.disabled=true;
-      to4.textContent='Finish';
-    }
-
-    // init
-    show(1);
+    renderHistory();
   </script>
 </body>
 </html>
